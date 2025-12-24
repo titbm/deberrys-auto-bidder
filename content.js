@@ -205,7 +205,6 @@ class AutoBidder {
     
     this.button.addEventListener('click', () => {
       if (!this.isReady) {
-        alert('Дождитесь загрузки данных страницы');
         return;
       }
       
@@ -372,7 +371,6 @@ class AutoBidder {
 
   async start() {
     if (!this.isReady) {
-      alert('Дождитесь загрузки данных страницы');
       return;
     }
     
@@ -380,14 +378,12 @@ class AutoBidder {
     
     // Перепроверяем данные перед стартом
     if (!this.updateBalance()) {
-      alert('Не удалось определить баланс. Обновите страницу.');
       return;
     }
 
     // Получаем текущую ставку и начинаем со следующей
     const currentBid = this.getCurrentBid();
     if (currentBid === null) {
-      alert('Не удалось определить текущую ставку. Обновите страницу.');
       return;
     }
     
@@ -420,7 +416,6 @@ class AutoBidder {
       if (!balanceOk || currentBid === null) {
         this.updateStatus('❌ Обнаружены невалидные данные. Остановка.', 'error');
         this.log('Обнаружен "?" или "Encrypted" во время работы');
-        alert('Автоставки остановлены.\nОбнаружены невалидные данные (? или Encrypted).\nОбновите страницу.');
         this.stop();
         return;
       }
@@ -428,7 +423,6 @@ class AutoBidder {
       // Проверяем, хватает ли монет
       if (this.balance < this.currentBid) {
         this.updateStatus(`❌ Недостаточно монет (${this.balance}/${this.currentBid})`, 'error');
-        alert(`Автоставки остановлены. Недостаточно монет.\nБаланс: ${this.balance}\nТребуется: ${this.currentBid}`);
         this.stop();
         break;
       }
@@ -619,24 +613,8 @@ class AutoBidder {
 
 // Инициализация после полной загрузки страницы
 function initAutoBidder() {
-  // Ждем, пока все элементы загрузятся
-  const checkReady = setInterval(() => {
-    const balanceEl = document.querySelector('[data-sentry-component="BalanceDisplay"]');
-    const bidButton = document.querySelector('button[data-sentry-source-file="place-a-bid.tsx"]');
-    
-    if (balanceEl && bidButton) {
-      clearInterval(checkReady);
-      new AutoBidder();
-    }
-  }, 500);
-  
-  // Таймаут на случай, если элементы не загрузятся
-  setTimeout(() => {
-    clearInterval(checkReady);
-    if (!document.getElementById('auto-bidder-control')) {
-      new AutoBidder();
-    }
-  }, 10000);
+  // Просто создаем экземпляр, он сам будет ждать загрузки данных
+  new AutoBidder();
 }
 
 if (document.readyState === 'loading') {
