@@ -261,7 +261,7 @@ class AutoBidder {
         
         const value = parseInt(text);
         
-        if (!isNaN(value) && value > 0) {
+        if (!isNaN(value) && value >= 0) {
           const parent = element.closest('div');
           const hasBerrySymbol = parent && parent.querySelector('[data-sentry-component="Berry"]');
           
@@ -355,7 +355,7 @@ class AutoBidder {
       const value = parseInt(text);
       
       // Проверяем, что это число и рядом есть Berry символ
-      if (!isNaN(value) && value > 0) {
+      if (!isNaN(value) && value >= 0) {
         const parent = element.closest('div');
         const hasBerrySymbol = parent && parent.querySelector('[data-sentry-component="Berry"]');
         
