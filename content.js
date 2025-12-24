@@ -33,7 +33,11 @@ class AutoBidder {
   }
 
   log(message) {
-    const timestamp = new Date().toLocaleTimeString();
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    const timestamp = `${hours}:${minutes}:${seconds}`;
     const entry = `[${timestamp}] ${message}`;
     this.logEntries.push(entry);
     console.log(`[AutoBidder] ${entry}`);
@@ -42,8 +46,14 @@ class AutoBidder {
   updateStatus(message, type = 'normal') {
     this.log(message);
     
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    const time = `${hours}:${minutes}:${seconds}`;
+    
     // Добавляем новую строку статуса
-    this.statusLines.push({ message, type, time: new Date().toLocaleTimeString() });
+    this.statusLines.push({ message, type, time });
     
     // Оставляем только последние 5 строк
     if (this.statusLines.length > 5) {
