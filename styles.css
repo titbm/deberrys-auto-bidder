@@ -1,0 +1,153 @@
+/* Стили для кнопки управления автоставками */
+
+.auto-bidder-container {
+  position: fixed !important;
+  bottom: 20px !important;
+  right: 20px !important;
+  z-index: 2147483647 !important;
+  
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  
+  pointer-events: auto !important;
+}
+
+.auto-bidder-status {
+  background: rgba(0, 0, 0, 0.95);
+  color: white;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.6;
+  max-width: 350px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  
+  display: none;
+  pointer-events: auto !important;
+}
+
+.auto-bidder-status.visible {
+  display: block;
+  animation: fadeIn 0.3s ease;
+}
+
+.auto-bidder-status-line {
+  margin: 4px 0;
+  padding: 2px 0;
+  opacity: 0.9;
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.auto-bidder-status-line:last-child {
+  border-bottom: none;
+}
+
+.auto-bidder-status-line.highlight {
+  color: #4ade80;
+  font-weight: 600;
+  opacity: 1;
+}
+
+.auto-bidder-status-line.error {
+  color: #f87171;
+  font-weight: 600;
+  opacity: 1;
+}
+
+.auto-bidder-btn {
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  
+  background: #8b5cf6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+  
+  transition: all 0.3s ease;
+  
+  pointer-events: auto !important;
+  position: relative !important;
+  z-index: 2147483647 !important;
+}
+
+.auto-bidder-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.6);
+  background: #7c3aed;
+}
+
+.auto-bidder-btn:active {
+  transform: translateY(0);
+}
+
+.auto-bidder-btn.running {
+  background: #ec4899;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.auto-bidder-btn.running:hover {
+  background: #db2777;
+  box-shadow: 0 6px 20px rgba(236, 72, 153, 0.6);
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 4px 15px rgba(236, 72, 153, 0.4);
+  }
+  50% {
+    box-shadow: 0 4px 25px rgba(236, 72, 153, 0.8);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Адаптивность для мобильных устройств */
+@media (max-width: 768px) {
+  .auto-bidder-container {
+    bottom: 15px;
+    right: 15px;
+  }
+  
+  .auto-bidder-btn {
+    padding: 10px 20px;
+    font-size: 13px;
+  }
+  
+  .auto-bidder-status {
+    max-width: 280px;
+    font-size: 12px;
+  }
+}
+
+.auto-bidder-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #6b7280;
+}
+
+.auto-bidder-btn:disabled:hover {
+  transform: none;
+  box-shadow: 0 4px 15px rgba(107, 114, 128, 0.4);
+  background: #6b7280;
+}

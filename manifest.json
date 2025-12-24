@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "Auction Auto Bidder",
+  "version": "1.0",
+  "description": "Автоматические ставки на аукционе",
+  "permissions": [
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://deberrys.xyz/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://deberrys.xyz/auctions/*"],
+      "js": ["content.js"],
+      "css": ["styles.css"]
+    }
+  ]
+}
