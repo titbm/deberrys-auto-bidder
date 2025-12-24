@@ -623,6 +623,13 @@ class AutoBidder {
 
 // Инициализация после полной загрузки страницы
 function initAutoBidder() {
+  // Проверяем, что мы на странице конкретного аукциона, а не на списке аукционов
+  const path = window.location.pathname;
+  if (path === '/auctions' || path === '/auctions/') {
+    console.log('[AutoBidder] Пропускаю страницу списка аукционов');
+    return;
+  }
+  
   // Просто создаем экземпляр, он сам будет ждать загрузки данных
   new AutoBidder();
 }
