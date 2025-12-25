@@ -40,7 +40,6 @@ class AutoBidder {
     const timestamp = `${hours}:${minutes}:${seconds}`;
     const entry = `[${timestamp}] ${message}`;
     this.logEntries.push(entry);
-    console.log(`[AutoBidder] ${entry}`);
   }
 
   updateStatus(message, type = 'normal') {
@@ -242,6 +241,32 @@ class AutoBidder {
   }
 
   async waitForPageReady() {
+    // Сначала проверяем, не завершён ли аукцион
+    const checkAuctionStatus = () => {
+      // Ищем текст "Auction Complete"
+      return Array.from(document.querySelectorAll('*')).find(el => 
+        el.textContent.trim() === 'Auction Complete'
+      );
+    };
+    
+    // Даём странице 2 секунды на загрузку перед проверкой статуса
+    await this.sleep(2000);
+    
+    if (checkAuctionStatus()) {
+      this.updateStatus('⚠️ Аукцион завершён', 'error');
+      this.log('Аукцион завершён, скрываю расширение');
+      
+      // Показываем сообщение 5 секунд
+      await this.sleep(5000);
+      
+      // Полностью скрываем UI
+      const host = document.getElementById('auto-bidder-host');
+      if (host) {
+        host.style.display = 'none';
+      }
+      return;
+    }
+    
     const maxAttempts = 60; // 30 секунд максимум
     let attempts = 0;
     
@@ -626,7 +651,6 @@ function initAutoBidder() {
   // Проверяем, что мы на странице конкретного аукциона, а не на списке аукционов
   const path = window.location.pathname;
   if (path === '/auctions' || path === '/auctions/') {
-    console.log('[AutoBidder] Пропускаю страницу списка аукционов');
     return;
   }
   

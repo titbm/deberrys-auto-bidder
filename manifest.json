@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Auction Auto Bidder",
-  "version": "1.0",
+  "version": "1.12",
   "description": "Автоматические ставки на аукционе",
   "permissions": [
     "activeTab",
