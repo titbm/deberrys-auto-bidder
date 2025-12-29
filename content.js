@@ -905,9 +905,10 @@ class ZashaponAutoPlayer {
   }
 
   async waitForPodsPageLoad() {
-    const maxWaitTime = 10000; // 10 секунд максимум
+    const maxWaitTime = 30000; // 30 секунд максимум
     const checkInterval = 500;
     const startTime = Date.now();
+    let noPodsMsgCount = 0;
     
     while (Date.now() - startTime < maxWaitTime) {
       // Проверяем, что кнопки Open загрузились
@@ -918,11 +919,17 @@ class ZashaponAutoPlayer {
         return true;
       }
       
-      // Или проверяем, что есть сообщение об отсутствии капсул
+      // Проверяем сообщение об отсутствии капсул
       const bodyText = document.body?.textContent || '';
       if (bodyText.includes('No unopened pods at the moment')) {
-        this.updateStatus('✅ Контент загружен (нет капсул)');
-        return true;
+        noPodsMsgCount++;
+        // Ждем 10 проверок подряд (5 сек), чтобы убедиться что это не временное состояние
+        if (noPodsMsgCount >= 10) {
+          this.updateStatus('✅ Контент загружен (нет капсул)');
+          return true;
+        }
+      } else {
+        noPodsMsgCount = 0; // Сбрасываем счетчик если сообщение исчезло
       }
       
       await this.sleep(checkInterval);
