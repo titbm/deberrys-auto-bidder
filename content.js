@@ -919,8 +919,8 @@ class ZashaponAutoPlayer {
       }
       
       // Или проверяем, что есть сообщение об отсутствии капсул
-      const noPods = document.querySelector('body')?.textContent?.includes('No pods');
-      if (noPods) {
+      const bodyText = document.body?.textContent || '';
+      if (bodyText.includes('No unopened pods at the moment')) {
         this.updateStatus('✅ Контент загружен (нет капсул)');
         return true;
       }
