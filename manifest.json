@@ -1,18 +1,24 @@
 {
   "manifest_version": 3,
   "name": "Auction Auto Bidder",
-  "version": "1.12",
+  "version": "2.0",
   "description": "Автоматические ставки на аукционе",
   "permissions": [
     "activeTab",
     "scripting"
   ],
   "host_permissions": [
-    "https://deberrys.xyz/*"
+    "https://deberrys.xyz/*",
+    "https://zashapon.com/*"
   ],
   "content_scripts": [
     {
       "matches": ["https://deberrys.xyz/auctions/*"],
+      "js": ["content.js"],
+      "css": ["styles.css"]
+    },
+    {
+      "matches": ["https://zashapon.com/*"],
       "js": ["content.js"],
       "css": ["styles.css"]
     }

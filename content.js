@@ -646,20 +646,515 @@ class AutoBidder {
   }
 }
 
+// Zashapon Auto Player - Автоматическая игра на zashapon.com
+class ZashaponAutoPlayer {
+  constructor() {
+    this.isRunning = false;
+    this.button = null;
+    this.statusBox = null;
+    this.container = null;
+    this.statusLines = [];
+    this.failedAttemptsInRow = 0;
+    this.maxFailedAttempts = 5;
+    
+    this.init();
+  }
+
+  init() {
+    this.createUI();
+    this.log('Zashapon Auto Player инициализирован');
+    
+    // Проверяем, было ли расширение запущено до перехода на другую страницу
+    const wasRunning = sessionStorage.getItem('zashaponAutoPlayerRunning');
+    if (wasRunning === 'true') {
+      this.updateStatus('🔄 Продолжаю работу...', 'success');
+      // Запускаем автоматически через небольшую задержку
+      setTimeout(() => {
+        this.start();
+      }, 1000);
+    } else {
+      this.updateStatus('✅ Готов к запуску');
+    }
+  }
+
+  log(message) {
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    const timestamp = `${hours}:${minutes}:${seconds}`;
+    console.log(`[${timestamp}] ${message}`);
+  }
+
+  updateStatus(message, type = 'normal') {
+    this.log(message);
+    
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    const time = `${hours}:${minutes}:${seconds}`;
+    
+    this.statusLines.push({ message, type, time });
+    
+    if (this.statusLines.length > 5) {
+      this.statusLines.shift();
+    }
+    
+    this.renderStatus();
+  }
+
+  renderStatus() {
+    if (!this.statusBox) return;
+    
+    this.statusBox.innerHTML = this.statusLines.map(line => {
+      const className = line.type === 'success' ? 'highlight' : 
+                       line.type === 'error' ? 'error' : '';
+      const message = line.message.length > 80 ? line.message.substring(0, 77) + '...' : line.message;
+      return `<div class="status-line ${className}">[${line.time}] ${message}</div>`;
+    }).join('');
+    
+    if (this.statusLines.length > 0) {
+      this.statusBox.classList.add('visible');
+    }
+  }
+
+  createUI() {
+    const host = document.createElement('div');
+    host.id = 'zashapon-player-host';
+    host.style.cssText = 'all: initial; position: fixed !important; bottom: 20px !important; right: 20px !important; z-index: 2147483647 !important; pointer-events: none !important;';
+    
+    const shadow = host.attachShadow({ mode: 'open' });
+    
+    const style = document.createElement('style');
+    style.textContent = `
+      * { pointer-events: auto !important; }
+      .container {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 10px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      }
+      .status {
+        background: rgba(0, 0, 0, 0.95);
+        color: white;
+        padding: 10px 16px;
+        border-radius: 8px;
+        font-size: 12px;
+        line-height: 1.6;
+        max-width: 350px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(10px);
+        display: none;
+      }
+      .status.visible {
+        display: block;
+        animation: fadeIn 0.3s ease;
+      }
+      .status-line {
+        margin: 4px 0;
+        padding: 2px 0;
+        opacity: 0.9;
+        white-space: normal;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      .status-line:last-child {
+        border-bottom: none;
+      }
+      .status-line.highlight {
+        color: #4ade80;
+        font-weight: 600;
+        opacity: 1;
+      }
+      .status-line.error {
+        color: #f87171;
+        font-weight: 600;
+        opacity: 1;
+      }
+      .btn {
+        padding: 12px 24px;
+        font-size: 14px;
+        font-weight: 600;
+        background: #8b5cf6;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+        transition: all 0.3s ease;
+      }
+      .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(139, 92, 246, 0.6);
+        background: #7c3aed;
+      }
+      .btn:active {
+        transform: translateY(0);
+      }
+      .btn.running {
+        background: #ec4899;
+        animation: pulse 2s ease-in-out infinite;
+      }
+      .btn.running:hover {
+        background: #db2777;
+        box-shadow: 0 6px 20px rgba(236, 72, 153, 0.6);
+      }
+      @keyframes pulse {
+        0%, 100% {
+          box-shadow: 0 4px 15px rgba(236, 72, 153, 0.4);
+        }
+        50% {
+          box-shadow: 0 4px 25px rgba(236, 72, 153, 0.8);
+        }
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    `;
+    shadow.appendChild(style);
+    
+    this.container = document.createElement('div');
+    this.container.className = 'container';
+    
+    this.statusBox = document.createElement('div');
+    this.statusBox.className = 'status';
+    
+    this.button = document.createElement('button');
+    this.button.textContent = 'Запустить';
+    this.button.className = 'btn';
+    
+    this.button.addEventListener('click', () => {
+      if (this.isRunning) {
+        this.stop();
+      } else {
+        this.start();
+      }
+    });
+    
+    this.container.appendChild(this.statusBox);
+    this.container.appendChild(this.button);
+    shadow.appendChild(this.container);
+    
+    if (document.body) {
+      document.body.appendChild(host);
+    } else {
+      document.addEventListener('DOMContentLoaded', () => {
+        document.body.appendChild(host);
+      });
+    }
+  }
+
+  async start() {
+    this.isRunning = true;
+    this.failedAttemptsInRow = 0;
+    this.button.textContent = 'Остановить';
+    this.button.classList.add('running');
+    this.updateStatus('🚀 Запуск автоигры...', 'success');
+    
+    // Сохраняем состояние в sessionStorage
+    sessionStorage.setItem('zashaponAutoPlayerRunning', 'true');
+    
+    await this.mainLoop();
+  }
+
+  stop() {
+    this.isRunning = false;
+    this.button.textContent = 'Запустить';
+    this.button.classList.remove('running');
+    this.updateStatus('⏹️ Остановлено', 'error');
+    
+    // Удаляем состояние из sessionStorage
+    sessionStorage.removeItem('zashaponAutoPlayerRunning');
+  }
+
+  async mainLoop() {
+    while (this.isRunning) {
+      // Проверяем, на какой странице мы находимся
+      const currentUrl = window.location.href;
+      
+      if (currentUrl.includes('/collection?view=pods')) {
+        // Мы на странице с капсулами
+        await this.openPodsLoop();
+      } else if (currentUrl.includes('zashapon.com')) {
+        // Мы на главной странице
+        const hasTickets = await this.playWithTickets();
+        
+        if (!hasTickets) {
+          // Билеты закончились, переходим к капсулам
+          this.updateStatus('🎫 Билеты закончились, проверяю капсулы...');
+          await this.sleep(3000);
+          window.location.href = 'https://zashapon.com/collection?view=pods';
+          return; // Выходим, т.к. страница перезагрузится
+        }
+      }
+      
+      await this.sleep(1000);
+    }
+  }
+
+  async playWithTickets() {
+    // Проверяем количество билетов
+    const ticketsCount = this.getTicketsCount();
+    
+    if (ticketsCount === 0) {
+      this.updateStatus('❌ Билеты закончились');
+      return false;
+    }
+    
+    this.updateStatus(`🎫 Билетов: ${ticketsCount}`);
+    await this.sleep(3000);
+    
+    // Нажимаем кнопку Play
+    const playButton = this.findPlayButton();
+    if (!playButton) {
+      this.updateStatus('❌ Кнопка Play не найдена', 'error');
+      await this.sleep(3000);
+      return true;
+    }
+    
+    this.updateStatus('🎮 Нажимаю Play...');
+    playButton.click();
+    
+    // Ждем результата
+    await this.sleep(3000);
+    const result = await this.waitForGameResult();
+    
+    if (result === 'won') {
+      this.updateStatus('🎉 Выиграли!', 'success');
+      this.failedAttemptsInRow = 0;
+      
+      // Нажимаем Add to collection
+      await this.sleep(3000);
+      const addButton = this.findAddToCollectionButton();
+      if (addButton) {
+        this.updateStatus('➕ Добавляю в коллекцию...');
+        addButton.click();
+        await this.sleep(3000);
+      }
+    } else if (result === 'failed') {
+      this.updateStatus('❌ Капсулу открыть не удалось', 'error');
+      this.failedAttemptsInRow++;
+      
+      if (this.failedAttemptsInRow >= this.maxFailedAttempts) {
+        this.updateStatus('⚠️ 5 неудач подряд! Смените IP-адрес!', 'error');
+        this.stop();
+        return false;
+      }
+      
+      // Закрываем модальное окно
+      await this.sleep(3000);
+      await this.closeModal();
+      await this.sleep(3000);
+    }
+    
+    await this.sleep(3000);
+    return true;
+  }
+
+  async openPodsLoop() {
+    // Ищем кнопки Open
+    const openButtons = this.findOpenButtons();
+    
+    if (openButtons.length === 0) {
+      this.updateStatus('✅ Нет капсул для открытия', 'success');
+      this.stop();
+      return;
+    }
+    
+    this.updateStatus(`📦 Найдено капсул: ${openButtons.length}`);
+    await this.sleep(3000);
+    
+    // Нажимаем на первую кнопку
+    const firstButton = openButtons[0];
+    this.updateStatus('🔓 Открываю капсулу...');
+    firstButton.click();
+    
+    // Ждем результата
+    await this.sleep(3000);
+    const result = await this.waitForGameResult();
+    
+    if (result === 'won') {
+      this.updateStatus('🎉 Выиграли!', 'success');
+      this.failedAttemptsInRow = 0;
+      
+      // Нажимаем Add to collection
+      await this.sleep(3000);
+      const addButton = this.findAddToCollectionButton();
+      if (addButton) {
+        this.updateStatus('➕ Добавляю в коллекцию...');
+        addButton.click();
+        await this.sleep(3000);
+      }
+    } else if (result === 'failed') {
+      this.updateStatus('❌ Капсулу открыть не удалось', 'error');
+      this.failedAttemptsInRow++;
+      
+      if (this.failedAttemptsInRow >= this.maxFailedAttempts) {
+        this.updateStatus('⚠️ 5 неудач подряд! Смените IP-адрес!', 'error');
+        this.stop();
+        return;
+      }
+      
+      // Закрываем модальное окно
+      await this.sleep(3000);
+      await this.closeModal();
+    }
+    
+    await this.sleep(3000);
+  }
+
+  getTicketsCount() {
+    const ticketLink = document.querySelector('a[aria-label="Ticket"]');
+    if (!ticketLink) return 0;
+    
+    const countSpan = ticketLink.querySelector('span');
+    if (!countSpan) return 0;
+    
+    const count = parseInt(countSpan.textContent.trim());
+    return isNaN(count) ? 0 : count;
+  }
+
+  findPlayButton() {
+    const buttons = document.querySelectorAll('button');
+    for (const btn of buttons) {
+      const text = btn.textContent.trim();
+      if (text === 'PLAY' && btn.classList.contains('animate-play-pulse')) {
+        return btn;
+      }
+    }
+    return null;
+  }
+
+  findAddToCollectionButton() {
+    const buttons = document.querySelectorAll('button[type="button"]');
+    for (const btn of buttons) {
+      if (btn.textContent.trim() === 'Add to collection') {
+        return btn;
+      }
+    }
+    return null;
+  }
+
+  findOpenButtons() {
+    const buttons = [];
+    const allButtons = document.querySelectorAll('button');
+    
+    for (const btn of allButtons) {
+      if (btn.textContent.trim() === 'Open' && 
+          btn.classList.contains('from-primary-gradient')) {
+        buttons.push(btn);
+      }
+    }
+    
+    return buttons;
+  }
+
+  async waitForGameResult() {
+    const maxWaitTime = 30000; // 30 секунд
+    const checkInterval = 500;
+    const startTime = Date.now();
+    
+    while (Date.now() - startTime < maxWaitTime) {
+      // Проверяем на выигрыш
+      const wonHeading = Array.from(document.querySelectorAll('h2')).find(h => 
+        h.textContent.includes('WOW! YOU WON!!!')
+      );
+      
+      if (wonHeading) {
+        return 'won';
+      }
+      
+      // Проверяем на неудачу
+      const failedHeading = Array.from(document.querySelectorAll('h2')).find(h => 
+        h.textContent.includes('Pod not fully opened')
+      );
+      
+      if (failedHeading) {
+        return 'failed';
+      }
+      
+      await this.sleep(checkInterval);
+    }
+    
+    return 'timeout';
+  }
+
+  async closeModal() {
+    this.updateStatus('🚪 Закрываю окно (ESC)...');
+    
+    // Нажимаем ESC
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', keyCode: 27, bubbles: true }));
+    
+    // Ждем, пока data-state изменится на "closed"
+    const maxWaitTime = 5000; // 5 секунд максимум
+    const checkInterval = 100;
+    const startTime = Date.now();
+    
+    while (Date.now() - startTime < maxWaitTime) {
+      const overlay = document.querySelector('div[data-state="closed"]');
+      if (overlay) {
+        this.updateStatus('✅ Окно закрыто');
+        return true;
+      }
+      
+      // Проверяем, что модальное окно вообще исчезло
+      const openOverlay = document.querySelector('div[data-state="open"]');
+      if (!openOverlay) {
+        this.updateStatus('✅ Окно закрыто');
+        return true;
+      }
+      
+      await this.sleep(checkInterval);
+    }
+    
+    this.updateStatus('⚠️ Таймаут закрытия окна', 'error');
+    return false;
+  }
+
+  sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+}
+
 // Инициализация после полной загрузки страницы
 function initAutoBidder() {
-  // Проверяем, что мы на странице конкретного аукциона, а не на списке аукционов
-  const path = window.location.pathname;
-  if (path === '/auctions' || path === '/auctions/') {
-    return;
-  }
+  const hostname = window.location.hostname;
   
-  // Просто создаем экземпляр, он сам будет ждать загрузки данных
-  new AutoBidder();
+  // Инициализируем AutoBidder только на deberrys.xyz
+  if (hostname.includes('deberrys.xyz')) {
+    const path = window.location.pathname;
+    if (path === '/auctions' || path === '/auctions/') {
+      return;
+    }
+    new AutoBidder();
+  }
+}
+
+function initZashaponPlayer() {
+  const hostname = window.location.hostname;
+  
+  // Инициализируем ZashaponAutoPlayer только на zashapon.com
+  if (hostname.includes('zashapon.com')) {
+    new ZashaponAutoPlayer();
+  }
 }
 
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initAutoBidder);
+  document.addEventListener('DOMContentLoaded', () => {
+    initAutoBidder();
+    initZashaponPlayer();
+  });
 } else if (document.readyState === 'interactive' || document.readyState === 'complete') {
   initAutoBidder();
+  initZashaponPlayer();
 }
