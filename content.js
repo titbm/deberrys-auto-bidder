@@ -695,6 +695,12 @@ class ZashaponAutoPlayer {
     const seconds = String(now.getSeconds()).padStart(2, '0');
     const time = `${hours}:${minutes}:${seconds}`;
     
+    // Проверяем, не дублируется ли сообщение
+    const lastStatus = this.statusLines[this.statusLines.length - 1];
+    if (lastStatus && lastStatus.message === message && lastStatus.time === time) {
+      return; // Пропускаем дубликат
+    }
+    
     this.statusLines.push({ message, type, time });
     
     if (this.statusLines.length > 5) {
