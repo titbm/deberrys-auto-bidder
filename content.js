@@ -977,12 +977,12 @@ class ZashaponAutoPlayer {
       this.failedAttemptsInRow = 0;
       
       // Нажимаем Add to collection
-      await this.sleep(3000);
+      await this.sleep(5000); // 5 секунд перед поиском кнопки
       const addButton = this.findAddToCollectionButton();
       if (addButton) {
         this.updateStatus('➕ Добавляю в коллекцию...');
         addButton.click();
-        await this.sleep(3000);
+        await this.sleep(5000); // 5 секунд после клика
       } else {
         this.updateStatus('⚠️ Кнопка не найдена', 'error');
         await this.sleep(3000);
@@ -1003,7 +1003,7 @@ class ZashaponAutoPlayer {
       await this.sleep(3000);
     }
     
-    await this.sleep(3000);
+    await this.sleep(5000); // 5 секунд перед следующей попыткой
     return true;
   }
 
@@ -1034,12 +1034,12 @@ class ZashaponAutoPlayer {
       this.failedAttemptsInRow = 0;
       
       // Нажимаем Add to collection
-      await this.sleep(3000);
+      await this.sleep(5000); // 5 секунд перед поиском кнопки
       const addButton = this.findAddToCollectionButton();
       if (addButton) {
         this.updateStatus('➕ Добавляю в коллекцию...');
         addButton.click();
-        await this.sleep(3000);
+        await this.sleep(5000); // 5 секунд после клика
       } else {
         this.updateStatus('⚠️ Кнопка не найдена', 'error');
         await this.sleep(3000);
@@ -1059,7 +1059,7 @@ class ZashaponAutoPlayer {
       await this.closeModal();
     }
     
-    await this.sleep(3000);
+    await this.sleep(5000); // 5 секунд перед следующей попыткой
   }
 
   getTicketsCount() {
