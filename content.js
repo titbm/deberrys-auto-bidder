@@ -883,7 +883,9 @@ class ZashaponAutoPlayer {
       const currentUrl = window.location.href;
       
       if (currentUrl.includes('/collection?view=pods')) {
-        // Мы на странице с капсулами
+        // Мы на странице с капсулами - ждем загрузки контента
+        this.updateStatus('⏳ Жду загрузки капсул...');
+        await this.waitForPodsPageLoad();
         await this.openPodsLoop();
       } else if (currentUrl.includes('zashapon.com')) {
         // Мы на главной странице
@@ -900,6 +902,34 @@ class ZashaponAutoPlayer {
       
       await this.sleep(1000);
     }
+  }
+
+  async waitForPodsPageLoad() {
+    const maxWaitTime = 10000; // 10 секунд максимум
+    const checkInterval = 500;
+    const startTime = Date.now();
+    
+    while (Date.now() - startTime < maxWaitTime) {
+      // Проверяем, что кнопки Open загрузились
+      const openButtons = this.findOpenButtons();
+      if (openButtons.length > 0) {
+        this.updateStatus('✅ Контент загружен');
+        await this.sleep(2000); // Дополнительная пауза для стабильности
+        return true;
+      }
+      
+      // Или проверяем, что есть сообщение об отсутствии капсул
+      const noPods = document.querySelector('body')?.textContent?.includes('No pods');
+      if (noPods) {
+        this.updateStatus('✅ Контент загружен (нет капсул)');
+        return true;
+      }
+      
+      await this.sleep(checkInterval);
+    }
+    
+    this.updateStatus('⚠️ Таймаут загрузки страницы', 'error');
+    return false;
   }
 
   async playWithTickets() {
