@@ -983,6 +983,9 @@ class ZashaponAutoPlayer {
         this.updateStatus('➕ Добавляю в коллекцию...');
         addButton.click();
         await this.sleep(3000);
+      } else {
+        this.updateStatus('⚠️ Кнопка не найдена', 'error');
+        await this.sleep(3000);
       }
     } else if (result === 'failed') {
       this.updateStatus('❌ Капсулу открыть не удалось', 'error');
@@ -1036,6 +1039,9 @@ class ZashaponAutoPlayer {
       if (addButton) {
         this.updateStatus('➕ Добавляю в коллекцию...');
         addButton.click();
+        await this.sleep(3000);
+      } else {
+        this.updateStatus('⚠️ Кнопка не найдена', 'error');
         await this.sleep(3000);
       }
     } else if (result === 'failed') {
