@@ -887,13 +887,14 @@ class ZashaponAutoPlayer {
     while (this.isRunning) {
       // Проверяем, на какой странице мы находимся
       const currentUrl = window.location.href;
+      const pathname = window.location.pathname;
       
       if (currentUrl.includes('/collection?view=pods')) {
         // Мы на странице с капсулами - ждем загрузки контента
         this.updateStatus('⏳ Жду загрузки капсул...');
         await this.waitForPodsPageLoad();
         await this.openPodsLoop();
-      } else if (currentUrl.includes('zashapon.com')) {
+      } else if (pathname === '/' || currentUrl === 'https://zashapon.com/' || currentUrl === 'https://zashapon.com') {
         // Мы на главной странице
         const hasTickets = await this.playWithTickets();
         
@@ -904,6 +905,12 @@ class ZashaponAutoPlayer {
           window.location.href = 'https://zashapon.com/collection?view=pods';
           return; // Выходим, т.к. страница перезагрузится
         }
+      } else {
+        // Мы на другой странице - переходим на главную
+        this.updateStatus('🔄 Перехожу на главную страницу...');
+        await this.sleep(2000);
+        window.location.href = 'https://zashapon.com/';
+        return; // Выходим, т.к. страница перезагрузится
       }
       
       await this.sleep(1000);
