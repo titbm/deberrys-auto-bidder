@@ -976,15 +976,15 @@ class ZashaponAutoPlayer {
       this.updateStatus('🎉 Выиграли!', 'success');
       this.failedAttemptsInRow = 0;
       
-      // Нажимаем Add to collection
-      await this.sleep(5000); // 5 секунд перед поиском кнопки
-      const addButton = this.findAddToCollectionButton();
+      // Ждем появления кнопки Add to collection
+      await this.sleep(2000);
+      const addButton = await this.waitForAddToCollectionButton();
       if (addButton) {
         this.updateStatus('➕ Добавляю в коллекцию...');
         addButton.click();
-        await this.sleep(5000); // 5 секунд после клика
+        await this.sleep(5000);
       } else {
-        this.updateStatus('⚠️ Кнопка не найдена', 'error');
+        this.updateStatus('⚠️ Кнопка не появилась', 'error');
         await this.sleep(3000);
       }
     } else if (result === 'failed') {
@@ -1033,15 +1033,15 @@ class ZashaponAutoPlayer {
       this.updateStatus('🎉 Выиграли!', 'success');
       this.failedAttemptsInRow = 0;
       
-      // Нажимаем Add to collection
-      await this.sleep(5000); // 5 секунд перед поиском кнопки
-      const addButton = this.findAddToCollectionButton();
+      // Ждем появления кнопки Add to collection
+      await this.sleep(2000);
+      const addButton = await this.waitForAddToCollectionButton();
       if (addButton) {
         this.updateStatus('➕ Добавляю в коллекцию...');
         addButton.click();
-        await this.sleep(5000); // 5 секунд после клика
+        await this.sleep(5000);
       } else {
-        this.updateStatus('⚠️ Кнопка не найдена', 'error');
+        this.updateStatus('⚠️ Кнопка не появилась', 'error');
         await this.sleep(3000);
       }
     } else if (result === 'failed') {
@@ -1081,6 +1081,24 @@ class ZashaponAutoPlayer {
         return btn;
       }
     }
+    return null;
+  }
+
+  async waitForAddToCollectionButton() {
+    const maxWaitTime = 30000; // 30 секунд
+    const checkInterval = 500;
+    const startTime = Date.now();
+    
+    this.updateStatus('⏳ Жду кнопку Add to collection...');
+    
+    while (Date.now() - startTime < maxWaitTime) {
+      const button = this.findAddToCollectionButton();
+      if (button) {
+        return button;
+      }
+      await this.sleep(checkInterval);
+    }
+    
     return null;
   }
 
