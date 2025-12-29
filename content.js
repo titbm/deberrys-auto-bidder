@@ -1097,7 +1097,7 @@ class ZashaponAutoPlayer {
   }
 
   async waitForGameResult() {
-    const maxWaitTime = 30000; // 30 секунд
+    const maxWaitTime = 180000; // 3 минуты
     const checkInterval = 500;
     const startTime = Date.now();
     
