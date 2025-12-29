@@ -859,7 +859,7 @@ class ZashaponAutoPlayer {
     this.failedAttemptsInRow = 0;
     this.button.textContent = 'Остановить';
     this.button.classList.add('running');
-    this.updateStatus('🚀 Запуск автоигры...', 'success');
+    this.updateStatus('🚀 Автооткрытие запущено', 'success');
     
     // Сохраняем состояние в sessionStorage
     sessionStorage.setItem('zashaponAutoPlayerRunning', 'true');
