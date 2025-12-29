@@ -1095,21 +1095,15 @@ class ZashaponAutoPlayer {
     // Нажимаем ESC
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', keyCode: 27, bubbles: true }));
     
-    // Ждем, пока data-state изменится на "closed"
+    // Ждем, пока диалог исчезнет
     const maxWaitTime = 5000; // 5 секунд максимум
     const checkInterval = 100;
     const startTime = Date.now();
     
     while (Date.now() - startTime < maxWaitTime) {
-      const overlay = document.querySelector('div[data-state="closed"]');
-      if (overlay) {
-        this.updateStatus('✅ Окно закрыто');
-        return true;
-      }
-      
-      // Проверяем, что модальное окно вообще исчезло
-      const openOverlay = document.querySelector('div[data-state="open"]');
-      if (!openOverlay) {
+      // Проверяем, что диалог исчез
+      const dialog = document.querySelector('[role="dialog"]');
+      if (!dialog) {
         this.updateStatus('✅ Окно закрыто');
         return true;
       }
