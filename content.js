@@ -650,7 +650,9 @@ class AutoBidder {
 class ZashaponAutoPlayer {
   constructor() {
     this.isRunning = false;
+    this.aggressiveMode = false;
     this.button = null;
+    this.aggressiveButton = null;
     this.statusBox = null;
     this.container = null;
     this.statusLines = [];
@@ -664,6 +666,9 @@ class ZashaponAutoPlayer {
     this.createUI();
     this.log('Zashapon Auto Player инициализирован');
     
+    // Скрываем кнопку агрессивного режима на странице с капсулами
+    this.updateAggressiveButtonVisibility();
+    
     // Проверяем, было ли расширение запущено до перехода на другую страницу
     const wasRunning = sessionStorage.getItem('zashaponAutoPlayerRunning');
     if (wasRunning === 'true') {
@@ -675,6 +680,31 @@ class ZashaponAutoPlayer {
     } else {
       this.updateStatus('✅ Готов к запуску');
     }
+    
+    // Отслеживаем изменения URL для обновления видимости кнопки
+    this.observeUrlChanges();
+  }
+
+  updateAggressiveButtonVisibility() {
+    const currentUrl = window.location.href;
+    if (currentUrl.includes('/collection?view=pods')) {
+      // На странице с капсулами - скрываем кнопку агрессивного режима
+      this.aggressiveButton.style.display = 'none';
+    } else {
+      // На других страницах - показываем кнопку (если не запущен процесс)
+      if (!this.isRunning) {
+        this.aggressiveButton.style.display = '';
+      }
+    }
+  }
+
+  observeUrlChanges() {
+    // Проверяем URL каждую секунду (на случай SPA навигации)
+    setInterval(() => {
+      if (!this.isRunning) {
+        this.updateAggressiveButtonVisibility();
+      }
+    }, 1000);
   }
 
   log(message) {
@@ -808,6 +838,35 @@ class ZashaponAutoPlayer {
         background: #db2777;
         box-shadow: 0 6px 20px rgba(236, 72, 153, 0.6);
       }
+      .btn-aggressive {
+        padding: 12px 24px;
+        font-size: 14px;
+        font-weight: 600;
+        background: #f97316;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(249, 115, 22, 0.4);
+        transition: all 0.3s ease;
+      }
+      .btn-aggressive:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(249, 115, 22, 0.6);
+        background: #ea580c;
+      }
+      .btn-aggressive:active {
+        transform: translateY(0);
+      }
+      .btn-aggressive.active {
+        background: #dc2626;
+        box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
+        animation: pulse 2s ease-in-out infinite;
+      }
+      .btn-aggressive.active:hover {
+        background: #b91c1c;
+        box-shadow: 0 6px 20px rgba(220, 38, 38, 0.6);
+      }
       @keyframes pulse {
         0%, 100% {
           box-shadow: 0 4px 15px rgba(236, 72, 153, 0.4);
@@ -843,12 +902,28 @@ class ZashaponAutoPlayer {
       if (this.isRunning) {
         this.stop();
       } else {
+        this.aggressiveMode = false;
+        this.start();
+      }
+    });
+    
+    // Создаем кнопку агрессивного режима
+    this.aggressiveButton = document.createElement('button');
+    this.aggressiveButton.textContent = 'Агрессивный режим';
+    this.aggressiveButton.className = 'btn-aggressive';
+    
+    this.aggressiveButton.addEventListener('click', () => {
+      if (this.isRunning) {
+        this.stop();
+      } else {
+        this.aggressiveMode = true;
         this.start();
       }
     });
     
     this.container.appendChild(this.statusBox);
     this.container.appendChild(this.button);
+    this.container.appendChild(this.aggressiveButton);
     shadow.appendChild(this.container);
     
     if (document.body) {
@@ -863,9 +938,19 @@ class ZashaponAutoPlayer {
   async start() {
     this.isRunning = true;
     this.failedAttemptsInRow = 0;
-    this.button.textContent = 'Остановить';
-    this.button.classList.add('running');
-    this.updateStatus('🚀 Автооткрытие запущено', 'success');
+    
+    // Скрываем обе кнопки запуска, показываем только "Остановить"
+    if (this.aggressiveMode) {
+      this.aggressiveButton.textContent = 'Остановить';
+      this.aggressiveButton.classList.add('active');
+      this.button.style.display = 'none';
+      this.updateStatus('⚡ Агрессивный режим запущен', 'success');
+    } else {
+      this.button.textContent = 'Остановить';
+      this.button.classList.add('running');
+      this.aggressiveButton.style.display = 'none';
+      this.updateStatus('🚀 Автооткрытие запущено', 'success');
+    }
     
     // Сохраняем состояние в sessionStorage
     sessionStorage.setItem('zashaponAutoPlayerRunning', 'true');
@@ -875,8 +960,16 @@ class ZashaponAutoPlayer {
 
   stop() {
     this.isRunning = false;
+    
+    // Возвращаем обе кнопки в исходное состояние
     this.button.textContent = 'Запустить';
     this.button.classList.remove('running');
+    this.button.style.display = '';
+    
+    this.aggressiveButton.textContent = 'Агрессивный режим';
+    this.aggressiveButton.classList.remove('active');
+    this.aggressiveButton.style.display = '';
+    
     this.updateStatus('⏹️ Остановлено', 'error');
     
     // Удаляем состояние из sessionStorage
@@ -896,7 +989,15 @@ class ZashaponAutoPlayer {
         await this.openPodsLoop();
       } else if (pathname === '/' || currentUrl === 'https://zashapon.com/' || currentUrl === 'https://zashapon.com') {
         // Мы на главной странице
-        const hasTickets = await this.playWithTickets();
+        let hasTickets;
+        
+        if (this.aggressiveMode) {
+          // Агрессивный режим - быстрое открытие
+          hasTickets = await this.playWithTicketsAggressive();
+        } else {
+          // Обычный режим
+          hasTickets = await this.playWithTickets();
+        }
         
         if (!hasTickets) {
           // Билеты закончились, переходим к капсулам
@@ -949,6 +1050,83 @@ class ZashaponAutoPlayer {
     }
     
     this.updateStatus('⚠️ Таймаут загрузки страницы', 'error');
+    return false;
+  }
+
+  async playWithTicketsAggressive() {
+    // Проверяем количество билетов
+    const ticketsCount = this.getTicketsCount();
+    
+    if (ticketsCount === 0) {
+      this.updateStatus('❌ Билеты закончились');
+      return false;
+    }
+    
+    this.updateStatus(`🎫 Билетов: ${ticketsCount}`);
+    await this.sleep(1000);
+    
+    // Нажимаем кнопку Play
+    const playButton = this.findPlayButton();
+    if (!playButton) {
+      this.updateStatus('❌ Кнопка Play не найдена', 'error');
+      await this.sleep(3000);
+      return true;
+    }
+    
+    this.updateStatus('⚡ Нажимаю Play (агрессивно)...');
+    playButton.click();
+    
+    // ОБЯЗАТЕЛЬНО ждем появления "Opening your pod..."
+    this.updateStatus('⏳ Жду "Opening your pod..."');
+    const openingStarted = await this.waitForOpeningMessage();
+    
+    if (!openingStarted) {
+      this.updateStatus('❌ Не дождался открытия, останавливаюсь', 'error');
+      this.failedAttemptsInRow++;
+      
+      if (this.failedAttemptsInRow >= this.maxFailedAttempts) {
+        this.updateStatus('⚠️ 5 неудач подряд! Смените IP-адрес!', 'error');
+        this.stop();
+        return false;
+      }
+      
+      // Закрываем модальное окно и пробуем снова
+      await this.sleep(3000);
+      await this.closeModal();
+      await this.sleep(3000);
+      return true;
+    }
+    
+    // Сообщение появилось - сбрасываем счетчик неудач
+    this.failedAttemptsInRow = 0;
+    this.updateStatus('✅ Открытие началось!', 'success');
+    await this.sleep(500);
+    
+    // ОБЯЗАТЕЛЬНО закрываем модальное окно
+    this.updateStatus('🚪 Закрываю окно...');
+    await this.closeModal();
+    await this.sleep(2000);
+    
+    return true;
+  }
+
+  async waitForOpeningMessage() {
+    const maxWaitTime = 600000; // 10 минут
+    const checkInterval = 200;
+    const startTime = Date.now();
+    
+    while (Date.now() - startTime < maxWaitTime && this.isRunning) {
+      // Проверяем все h2 заголовки
+      const headings = document.querySelectorAll('h2');
+      for (const h of headings) {
+        if (h.textContent.includes('Opening your pod')) {
+          return true;
+        }
+      }
+      
+      await this.sleep(checkInterval);
+    }
+    
     return false;
   }
 
