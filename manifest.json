@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Auction Auto Bidder",
-  "version": "2.0",
+  "version": "2.1",
   "description": "Автоматические ставки на аукционе",
   "permissions": [
     "activeTab",
@@ -9,7 +9,8 @@
   ],
   "host_permissions": [
     "https://deberrys.xyz/*",
-    "https://zashapon.com/*"
+    "https://zashapon.com/*",
+    "https://www.confidentialtoken.com/*"
   ],
   "content_scripts": [
     {
@@ -19,6 +20,11 @@
     },
     {
       "matches": ["https://zashapon.com/*"],
+      "js": ["content.js"],
+      "css": ["styles.css"]
+    },
+    {
+      "matches": ["https://www.confidentialtoken.com/*"],
       "js": ["content.js"],
       "css": ["styles.css"]
     }
